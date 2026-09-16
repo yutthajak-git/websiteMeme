@@ -12,6 +12,7 @@ import {
 import EmojiPicker from "./controls/EmojiPicker";
 import TextControls from "./controls/TextControls";
 import StickerControls from "./controls/StickerControls";
+import FilterControls from "./controls/FilterControls";
 
 const SUPPORTED_FORMATS = ["image/jpeg", "image/png", "image/webp"];
 
@@ -19,6 +20,8 @@ export default function Sidebar({
     hasImage,
     onImageSelect,
     onError,
+    filter,
+    onSelectFilter,
     onAddText,
     selectedLayer,
     onUpdateTextLayer,
@@ -134,6 +137,14 @@ export default function Sidebar({
                     sticker={selectedSticker}
                     onUpdateSize={onUpdateStickerSize}
                     onDelete={onDeleteSticker}
+                />
+            )}
+
+            {/* แผงเลือกฟิลเตอร์ภาพ */}
+            {hasImage && (
+                <FilterControls
+                    currentFilter={filter}
+                    onSelectFilter={onSelectFilter}
                 />
             )}
 

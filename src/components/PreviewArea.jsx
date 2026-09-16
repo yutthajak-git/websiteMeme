@@ -4,24 +4,32 @@ import { Image as ImageIcon } from "lucide-react";
 const PreviewArea = forwardRef(function PreviewArea(
     {
         image,
+        filter,
         errorMessage,
         textLayers,
         selectedTextId,
         onSelectText,
         onUpdateTextPosition,
+        onEndTextDrag,
         stickers,
         selectedStickerId,
         onSelectSticker,
         onUpdateStickerPosition,
+        onEndStickerDrag,
     },
     ref,
 ) {
     const containerRef = useRef(null);
 
-    // ส่ง reference ของ DOM container ออกไปให้ App.jsx ใช้งาน
     useImperativeHandle(ref, () => containerRef.current);
 
-    const handleItemMouseDown = (e, item, onUpdatePosition, onSelect) => {
+    const handleItemMouseDown = (
+        e,
+        item,
+        onUpdatePosition,
+        onSelect,
+        onEndDrag,
+    ) => {
         e.stopPropagation();
         onSelect(item.id);
 
@@ -32,8 +40,10 @@ const PreviewArea = forwardRef(function PreviewArea(
         const startMouseY = e.clientY;
         const initialX = item.x;
         const initialY = item.y;
+        let hasMoved = false;
 
         const handleMouseMove = (moveEvent) => {
+            hasMoved = true;
             const deltaX = moveEvent.clientX - startMouseX;
             const deltaY = moveEvent.clientY - startMouseY;
 
@@ -49,6 +59,9 @@ const PreviewArea = forwardRef(function PreviewArea(
         const handleMouseUp = () => {
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
+            if (hasMoved && onEndDrag) {
+                onEndDrag();
+            }
         };
 
         window.addEventListener("mousemove", handleMouseMove);
@@ -84,6 +97,7 @@ const PreviewArea = forwardRef(function PreviewArea(
                             src={image}
                             alt="Selected Meme Preview"
                             className="preview-image"
+                            style={{ filter: filter || "none" }}
                         />
 
                         {textLayers.map((layer) => (
@@ -95,6 +109,7 @@ const PreviewArea = forwardRef(function PreviewArea(
                                         layer,
                                         onUpdateTextPosition,
                                         onSelectText,
+                                        onEndTextDrag,
                                     )
                                 }
                                 onClick={(e) => {
@@ -127,6 +142,7 @@ const PreviewArea = forwardRef(function PreviewArea(
                                         sticker,
                                         onUpdateStickerPosition,
                                         onSelectSticker,
+                                        onEndStickerDrag,
                                     )
                                 }
                                 onClick={(e) => {

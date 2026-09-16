@@ -15,37 +15,92 @@ export default function App() {
     const savedData = loadProjectFromStorage();
 
     const [image, setImage] = useState(savedData?.image || null);
+    const [filter, setFilter] = useState(savedData?.filter || "none");
+    const [textLayers, setTextLayers] = useState(savedData?.textLayers || []);
+    const [stickers, setStickers] = useState(savedData?.stickers || []);
+
+    const [selectedTextId, setSelectedTextId] = useState(null);
+    const [selectedStickerId, setSelectedStickerId] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
     const [infoMessage, setInfoMessage] = useState(null);
 
-    const [textLayers, setTextLayers] = useState(savedData?.textLayers || []);
-    const [selectedTextId, setSelectedTextId] = useState(null);
-    const [stickers, setStickers] = useState(savedData?.stickers || []);
-    const [selectedStickerId, setSelectedStickerId] = useState(null);
-
     const previewBoxRef = useRef(null);
 
+    // --- Undo / Redo History Stack ---
+    const [history, setHistory] = useState([
+        {
+            image: savedData?.image || null,
+            filter: savedData?.filter || "none",
+            textLayers: savedData?.textLayers || [],
+            stickers: savedData?.stickers || [],
+        },
+    ]);
+    const [historyIndex, setHistoryIndex] = useState(0);
+
+    // ฟังก์ชันบันทึกก้าวใหม่ลง History
+    const pushHistory = (newState) => {
+        const updated = {
+            image,
+            filter,
+            textLayers,
+            stickers,
+            ...newState,
+        };
+        const nextHistory = history.slice(0, historyIndex + 1);
+        setHistory([...nextHistory, updated]);
+        setHistoryIndex(nextHistory.length);
+    };
+
+    const handleUndo = () => {
+        if (historyIndex > 0) {
+            const prev = history[historyIndex - 1];
+            setImage(prev.image);
+            setFilter(prev.filter);
+            setTextLayers(prev.textLayers);
+            setStickers(prev.stickers);
+            setHistoryIndex((idx) => idx - 1);
+            setSelectedTextId(null);
+            setSelectedStickerId(null);
+        }
+    };
+
+    const handleRedo = () => {
+        if (historyIndex < history.length - 1) {
+            const next = history[historyIndex + 1];
+            setImage(next.image);
+            setFilter(next.filter);
+            setTextLayers(next.textLayers);
+            setStickers(next.stickers);
+            setHistoryIndex((idx) => idx + 1);
+            setSelectedTextId(null);
+            setSelectedStickerId(null);
+        }
+    };
+
+    // Upload Image
     const handleImageSelect = (file) => {
         setErrorMessage(null);
-        setInfoMessage(null);
-
         const reader = new FileReader();
         reader.onload = (e) => {
-            setImage(e.target.result);
-        };
-        reader.onerror = () => {
-            setErrorMessage("Failed to read image file.");
+            const newImg = e.target.result;
+            setImage(newImg);
+            pushHistory({ image: newImg });
         };
         reader.readAsDataURL(file);
     };
 
+    // Filter Selection
+    const handleSelectFilter = (newFilter) => {
+        setFilter(newFilter);
+        pushHistory({ filter: newFilter });
+    };
+
+    // Text Handlers
     const handleAddText = () => {
         if (!image) {
             setErrorMessage("Please upload an image first before adding text.");
             return;
         }
-        setErrorMessage(null);
-
         const newLayer = {
             id: Date.now(),
             text: textLayers.length === 0 ? "TOP TEXT" : "BOTTOM TEXT",
@@ -54,10 +109,11 @@ export default function App() {
             fontSize: 36,
             color: "#ffffff",
         };
-
-        setTextLayers((prev) => [...prev, newLayer]);
+        const updated = [...textLayers, newLayer];
+        setTextLayers(updated);
         setSelectedTextId(newLayer.id);
         setSelectedStickerId(null);
+        pushHistory({ textLayers: updated });
     };
 
     const handleUpdateTextPosition = (id, x, y) => {
@@ -67,22 +123,23 @@ export default function App() {
     };
 
     const handleUpdateTextLayer = (field, value) => {
-        setTextLayers((prev) =>
-            prev.map((layer) =>
-                layer.id === selectedTextId
-                    ? { ...layer, [field]: value }
-                    : layer,
-            ),
+        const updated = textLayers.map((layer) =>
+            layer.id === selectedTextId ? { ...layer, [field]: value } : layer,
         );
+        setTextLayers(updated);
+        pushHistory({ textLayers: updated });
     };
 
     const handleDeleteTextLayer = () => {
-        setTextLayers((prev) =>
-            prev.filter((layer) => layer.id !== selectedTextId),
+        const updated = textLayers.filter(
+            (layer) => layer.id !== selectedTextId,
         );
+        setTextLayers(updated);
         setSelectedTextId(null);
+        pushHistory({ textLayers: updated });
     };
 
+    // Sticker Handlers
     const handleAddSticker = (emoji) => {
         if (!image) {
             setErrorMessage(
@@ -90,138 +147,95 @@ export default function App() {
             );
             return;
         }
-        setErrorMessage(null);
-
-        const newSticker = {
-            id: Date.now(),
-            emoji,
-            x: 180,
-            y: 180,
-            size: 48,
-        };
-
-        setStickers((prev) => [...prev, newSticker]);
+        const newSticker = { id: Date.now(), emoji, x: 180, y: 180, size: 48 };
+        const updated = [...stickers, newSticker];
+        setStickers(updated);
         setSelectedStickerId(newSticker.id);
         setSelectedTextId(null);
+        pushHistory({ stickers: updated });
     };
 
     const handleUpdateStickerPosition = (id, x, y) => {
         setStickers((prev) =>
-            prev.map((sticker) =>
-                sticker.id === id ? { ...sticker, x, y } : sticker,
-            ),
+            prev.map((s) => (s.id === id ? { ...s, x, y } : s)),
         );
     };
 
     const handleUpdateStickerSize = (size) => {
-        setStickers((prev) =>
-            prev.map((s) => (s.id === selectedStickerId ? { ...s, size } : s)),
+        const updated = stickers.map((s) =>
+            s.id === selectedStickerId ? { ...s, size } : s,
         );
+        setStickers(updated);
+        pushHistory({ stickers: updated });
     };
 
     const handleDeleteSticker = () => {
-        setStickers((prev) => prev.filter((s) => s.id !== selectedStickerId));
+        const updated = stickers.filter((s) => s.id !== selectedStickerId);
+        setStickers(updated);
         setSelectedStickerId(null);
+        pushHistory({ stickers: updated });
     };
 
+    // Save / Clear
     const handleSaveProject = () => {
-        setErrorMessage(null);
-        setInfoMessage(null);
-
-        if (!image && textLayers.length === 0 && stickers.length === 0) {
-            setErrorMessage("No project content to save.");
-            return;
-        }
-
-        const result = saveProjectToStorage({ image, textLayers, stickers });
-        if (result.success) {
-            setInfoMessage(
-                "Project saved successfully! You can refresh safely.",
-            );
-            setTimeout(() => setInfoMessage(null), 3500);
-        } else {
-            setErrorMessage(result.error);
-        }
-    };
-
-    const handleClearProject = () => {
-        if (
-            !window.confirm("Are you sure you want to clear this meme project?")
-        ) {
-            return;
-        }
-
-        clearProjectFromStorage();
-        setImage(null);
-        setTextLayers([]);
-        setStickers([]);
-        setSelectedTextId(null);
-        setSelectedStickerId(null);
-        setErrorMessage(null);
-        setInfoMessage("Project cleared.");
+        saveProjectToStorage({ image, filter, textLayers, stickers });
+        setInfoMessage("Project saved!");
         setTimeout(() => setInfoMessage(null), 2500);
     };
 
-    // Export PNG
+    const handleClearProject = () => {
+        if (window.confirm("Clear all project content?")) {
+            clearProjectFromStorage();
+            setImage(null);
+            setFilter("none");
+            setTextLayers([]);
+            setStickers([]);
+            setSelectedTextId(null);
+            setSelectedStickerId(null);
+            pushHistory({
+                image: null,
+                filter: "none",
+                textLayers: [],
+                stickers: [],
+            });
+        }
+    };
+
+    // Export Handlers
     const handleDownloadMeme = async () => {
-        if (!image) {
-            setErrorMessage("Please upload an image first before downloading.");
-            return;
-        }
-
-        try {
-            setErrorMessage(null);
-            setSelectedTextId(null);
-            setSelectedStickerId(null);
-
-            await exportMemeAsPng({
-                containerElement: previewBoxRef.current,
-                imageUrl: image,
-                textLayers,
-                stickers,
-                filename: `meme-${Date.now()}.png`,
-            });
-        } catch (err) {
-            console.error("PNG export failed:", err);
-            setErrorMessage("Failed to export PNG. Please try again.");
-        }
+        if (!image) return setErrorMessage("Upload image first");
+        await exportMemeAsPng({
+            containerElement: previewBoxRef.current,
+            imageUrl: image,
+            textLayers,
+            stickers,
+            filter,
+            filename: `meme-${Date.now()}.png`,
+        });
     };
 
-    // Export PDF
     const handleDownloadPdf = async () => {
-        if (!image) {
-            setErrorMessage(
-                "Please upload an image first before exporting PDF.",
-            );
-            return;
-        }
-
-        try {
-            setErrorMessage(null);
-            setSelectedTextId(null);
-            setSelectedStickerId(null);
-
-            await exportMemeAsPdf({
-                containerElement: previewBoxRef.current,
-                imageUrl: image,
-                textLayers,
-                stickers,
-                filename: `meme-${Date.now()}.pdf`,
-            });
-        } catch (err) {
-            console.error("PDF export failed:", err);
-            setErrorMessage("Failed to export PDF. Please try again.");
-        }
+        if (!image) return setErrorMessage("Upload image first");
+        await exportMemeAsPdf({
+            containerElement: previewBoxRef.current,
+            imageUrl: image,
+            textLayers,
+            stickers,
+            filter,
+            filename: `meme-${Date.now()}.pdf`,
+        });
     };
 
-    const selectedLayer = textLayers.find(
-        (layer) => layer.id === selectedTextId,
-    );
+    const selectedLayer = textLayers.find((l) => l.id === selectedTextId);
     const selectedSticker = stickers.find((s) => s.id === selectedStickerId);
 
     return (
         <div className="editor-container">
             <Header
+                canUndo={historyIndex > 0}
+                canRedo={historyIndex < history.length - 1}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
                 onDownloadPng={handleDownloadMeme}
                 onDownloadPdf={handleDownloadPdf}
             />
@@ -230,6 +244,7 @@ export default function App() {
                 <PreviewArea
                     ref={previewBoxRef}
                     image={image}
+                    filter={filter}
                     errorMessage={errorMessage || infoMessage}
                     textLayers={textLayers}
                     selectedTextId={selectedTextId}
@@ -249,6 +264,8 @@ export default function App() {
 
                 <Sidebar
                     hasImage={Boolean(image)}
+                    filter={filter}
+                    onSelectFilter={handleSelectFilter}
                     onImageSelect={handleImageSelect}
                     onError={setErrorMessage}
                     onAddText={handleAddText}
