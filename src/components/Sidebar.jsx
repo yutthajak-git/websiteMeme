@@ -18,7 +18,8 @@ export default function Sidebar({
     selectedSticker,
     onUpdateStickerSize,
     onDeleteSticker,
-    onPlaceholderClick,
+
+    onDownloadClick,
 }) {
     const fileInputRef = useRef(null);
     const [showStickerPicker, setShowStickerPicker] = useState(false);
@@ -136,7 +137,7 @@ export default function Sidebar({
                 <button
                     type="button"
                     className="btn btn-primary btn-full"
-                    onClick={() => onPlaceholderClick("Download")}
+                    onClick={onDownloadClick}
                 >
                     <Download size={18} />
                     Download Meme

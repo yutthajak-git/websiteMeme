@@ -1,19 +1,25 @@
-import { useRef } from "react";
+import { useRef, useImperativeHandle, forwardRef } from "react";
 import { Image as ImageIcon } from "lucide-react";
 
-export default function PreviewArea({
-    image,
-    errorMessage,
-    textLayers,
-    selectedTextId,
-    onSelectText,
-    onUpdateTextPosition,
-    stickers,
-    selectedStickerId,
-    onSelectSticker,
-    onUpdateStickerPosition,
-}) {
+const PreviewArea = forwardRef(function PreviewArea(
+    {
+        image,
+        errorMessage,
+        textLayers,
+        selectedTextId,
+        onSelectText,
+        onUpdateTextPosition,
+        stickers,
+        selectedStickerId,
+        onSelectSticker,
+        onUpdateStickerPosition,
+    },
+    ref,
+) {
     const containerRef = useRef(null);
+
+    // ส่ง reference ของ DOM container ออกไปให้ App.jsx ใช้งาน
+    useImperativeHandle(ref, () => containerRef.current);
 
     const handleItemMouseDown = (e, item, onUpdatePosition, onSelect) => {
         e.stopPropagation();
@@ -157,4 +163,6 @@ export default function PreviewArea({
             </div>
         </main>
     );
-}
+});
+
+export default PreviewArea;
