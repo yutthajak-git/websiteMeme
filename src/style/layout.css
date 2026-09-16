@@ -1,48 +1,58 @@
 /* App Container */
 .editor-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
 }
 
 /* Header */
 .editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1.5rem;
-  background-color: var(--bg-surface);
-  border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1.5rem;
+    background-color: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .brand-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: var(--text-main);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--text-main);
 }
 
 /* Main Workspace */
 .editor-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
+    display: flex;
+    flex: 1;
+    overflow: hidden;
 }
 
 /* Responsive Behavior */
 @media (max-width: 768px) {
-  .editor-body {
-    flex-direction: column;
-  }
+    .editor-body {
+        flex-direction: column;
+    }
 
-  .sidebar {
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid var(--border-color);
-  }
+    .sidebar {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+    }
 
-  .preview-area {
-    padding: 1.5rem;
-  }
+    .preview-area {
+        padding: 1.5rem;
+    }
+}
+
+.brand-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.brand-logo {
+    flex-shrink: 0;
 }
