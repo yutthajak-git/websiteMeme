@@ -34,13 +34,16 @@
 .preview-area {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   background-color: var(--bg-main);
   overflow: auto;
+  gap: 1rem;
 }
 
+/* Canvas Container (Holds either placeholder or loaded image) */
 .meme-canvas-placeholder {
   width: 100%;
   max-width: 500px;
@@ -54,6 +57,21 @@
   padding: 1.5rem;
   text-align: center;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+/* Container state when an image is loaded */
+.meme-canvas-placeholder.has-image {
+  border-style: solid;
+  padding: 0;
+  background-color: #0b1120;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .placeholder-content {
@@ -77,6 +95,19 @@
 .placeholder-content p {
   font-size: 0.875rem;
   color: var(--text-muted);
+}
+
+/* Error Banner */
+.error-banner {
+  max-width: 500px;
+  width: 100%;
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  text-align: center;
 }
 
 /* Sidebar / Toolbar */
@@ -140,6 +171,11 @@
 
 .btn-full {
   width: 100%;
+}
+
+/* Hidden File Input */
+.hidden-file-input {
+  display: none;
 }
 
 /* Responsive Behavior */
