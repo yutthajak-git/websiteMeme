@@ -1,20 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "./components/Header";
 import PreviewArea from "./components/PreviewArea";
 import Sidebar from "./components/Sidebar";
+import { exportMemeAsPng } from "./utils/exportMeme";
 import "./App.css";
 
 export default function App() {
     const [image, setImage] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
 
-    // Text Layers State
+    // Layers State
     const [textLayers, setTextLayers] = useState([]);
     const [selectedTextId, setSelectedTextId] = useState(null);
-
-    // Sticker Layers State
     const [stickers, setStickers] = useState([]);
     const [selectedStickerId, setSelectedStickerId] = useState(null);
+
+    // Ref สำหรับเข้าถึง DOM กล่อง Preview
+    const previewBoxRef = useRef(null);
 
     useEffect(() => {
         return () => {
@@ -120,8 +122,30 @@ export default function App() {
         setSelectedStickerId(null);
     };
 
-    const handlePlaceholderClick = (actionName) => {
-        alert(`[Placeholder] ${actionName} feature will be implemented next.`);
+    // --- Export Action Handler ---
+    const handleDownloadMeme = async () => {
+        if (!image) {
+            setErrorMessage("Please upload an image first before downloading.");
+            return;
+        }
+
+        try {
+            setErrorMessage(null);
+            // เคลียร์ selection ชั่วคราวก่อนเริ่ม export
+            setSelectedTextId(null);
+            setSelectedStickerId(null);
+
+            await exportMemeAsPng({
+                containerElement: previewBoxRef.current,
+                imageUrl: image,
+                textLayers,
+                stickers,
+                filename: `meme-${Date.now()}.png`,
+            });
+        } catch (err) {
+            console.error("Export failed:", err);
+            setErrorMessage("Failed to export meme. Please try again.");
+        }
     };
 
     const selectedLayer = textLayers.find(
@@ -131,12 +155,11 @@ export default function App() {
 
     return (
         <div className="editor-container">
-            <Header
-                onDownloadClick={() => handlePlaceholderClick("Download")}
-            />
+            <Header onDownloadClick={handleDownloadMeme} />
 
             <div className="editor-body">
                 <PreviewArea
+                    ref={previewBoxRef}
                     image={image}
                     errorMessage={errorMessage}
                     textLayers={textLayers}
@@ -167,7 +190,7 @@ export default function App() {
                     selectedSticker={selectedSticker}
                     onUpdateStickerSize={handleUpdateStickerSize}
                     onDeleteSticker={handleDeleteSticker}
-                    onPlaceholderClick={handlePlaceholderClick}
+                    onDownloadClick={handleDownloadMeme}
                 />
             </div>
         </div>
