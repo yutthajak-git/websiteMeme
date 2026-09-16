@@ -7,8 +7,14 @@ import "./App.css";
 export default function App() {
     const [image, setImage] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
+
+    // Text Layers State
     const [textLayers, setTextLayers] = useState([]);
     const [selectedTextId, setSelectedTextId] = useState(null);
+
+    // Sticker Layers State
+    const [stickers, setStickers] = useState([]);
+    const [selectedStickerId, setSelectedStickerId] = useState(null);
 
     useEffect(() => {
         return () => {
@@ -27,13 +33,12 @@ export default function App() {
         setImage(previewUrl);
     };
 
-    // Add Text Layer
+    // --- Text Layer Handlers ---
     const handleAddText = () => {
         if (!image) {
             setErrorMessage("Please upload an image first before adding text.");
             return;
         }
-
         setErrorMessage(null);
 
         const newLayer = {
@@ -47,16 +52,15 @@ export default function App() {
 
         setTextLayers((prev) => [...prev, newLayer]);
         setSelectedTextId(newLayer.id);
+        setSelectedStickerId(null);
     };
 
-    // Drag position update
     const handleUpdateTextPosition = (id, x, y) => {
         setTextLayers((prev) =>
             prev.map((layer) => (layer.id === id ? { ...layer, x, y } : layer)),
         );
     };
 
-    // Update text property (text, fontSize, color)
     const handleUpdateTextLayer = (field, value) => {
         setTextLayers((prev) =>
             prev.map((layer) =>
@@ -67,12 +71,53 @@ export default function App() {
         );
     };
 
-    // Delete current selected text layer
     const handleDeleteTextLayer = () => {
         setTextLayers((prev) =>
             prev.filter((layer) => layer.id !== selectedTextId),
         );
         setSelectedTextId(null);
+    };
+
+    // --- Sticker Handlers ---
+    const handleAddSticker = (emoji) => {
+        if (!image) {
+            setErrorMessage(
+                "Please upload an image first before adding stickers.",
+            );
+            return;
+        }
+        setErrorMessage(null);
+
+        const newSticker = {
+            id: Date.now(),
+            emoji,
+            x: 180,
+            y: 180,
+            size: 48,
+        };
+
+        setStickers((prev) => [...prev, newSticker]);
+        setSelectedStickerId(newSticker.id);
+        setSelectedTextId(null);
+    };
+
+    const handleUpdateStickerPosition = (id, x, y) => {
+        setStickers((prev) =>
+            prev.map((sticker) =>
+                sticker.id === id ? { ...sticker, x, y } : sticker,
+            ),
+        );
+    };
+
+    const handleUpdateStickerSize = (size) => {
+        setStickers((prev) =>
+            prev.map((s) => (s.id === selectedStickerId ? { ...s, size } : s)),
+        );
+    };
+
+    const handleDeleteSticker = () => {
+        setStickers((prev) => prev.filter((s) => s.id !== selectedStickerId));
+        setSelectedStickerId(null);
     };
 
     const handlePlaceholderClick = (actionName) => {
@@ -82,6 +127,7 @@ export default function App() {
     const selectedLayer = textLayers.find(
         (layer) => layer.id === selectedTextId,
     );
+    const selectedSticker = stickers.find((s) => s.id === selectedStickerId);
 
     return (
         <div className="editor-container">
@@ -95,8 +141,18 @@ export default function App() {
                     errorMessage={errorMessage}
                     textLayers={textLayers}
                     selectedTextId={selectedTextId}
-                    onSelectText={setSelectedTextId}
+                    onSelectText={(id) => {
+                        setSelectedTextId(id);
+                        if (id) setSelectedStickerId(null);
+                    }}
                     onUpdateTextPosition={handleUpdateTextPosition}
+                    stickers={stickers}
+                    selectedStickerId={selectedStickerId}
+                    onSelectSticker={(id) => {
+                        setSelectedStickerId(id);
+                        if (id) setSelectedTextId(null);
+                    }}
+                    onUpdateStickerPosition={handleUpdateStickerPosition}
                 />
 
                 <Sidebar
@@ -107,6 +163,10 @@ export default function App() {
                     selectedLayer={selectedLayer}
                     onUpdateTextLayer={handleUpdateTextLayer}
                     onDeleteTextLayer={handleDeleteTextLayer}
+                    onAddSticker={handleAddSticker}
+                    selectedSticker={selectedSticker}
+                    onUpdateStickerSize={handleUpdateStickerSize}
+                    onDeleteSticker={handleDeleteSticker}
                     onPlaceholderClick={handlePlaceholderClick}
                 />
             </div>
