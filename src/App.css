@@ -43,7 +43,7 @@
   gap: 1rem;
 }
 
-/* Canvas Container (Holds either placeholder or loaded image) */
+/* Canvas Container */
 .meme-canvas-placeholder {
   width: 100%;
   max-width: 500px;
@@ -58,9 +58,10 @@
   text-align: center;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   overflow: hidden;
+  position: relative;
+  user-select: none;
 }
 
-/* Container state when an image is loaded */
 .meme-canvas-placeholder.has-image {
   border-style: solid;
   padding: 0;
@@ -72,6 +73,7 @@
   height: 100%;
   object-fit: contain;
   display: block;
+  pointer-events: none;
 }
 
 .placeholder-content {
@@ -97,6 +99,32 @@
   color: var(--text-muted);
 }
 
+/* Text Layers Overlay */
+.meme-text-layer {
+  position: absolute;
+  cursor: grab;
+  font-family: Impact, -apple-system, sans-serif;
+  text-transform: uppercase;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+  padding: 4px 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 90%;
+  touch-action: none;
+}
+
+.meme-text-layer:active {
+  cursor: grabbing;
+}
+
+.meme-text-layer.selected {
+  outline: 2px dashed #6366f1;
+  outline-offset: 4px;
+}
+
 /* Error Banner */
 .error-banner {
   max-width: 500px;
@@ -119,6 +147,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  overflow-y: auto;
 }
 
 .sidebar-title {
@@ -133,6 +162,60 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+/* Text Layer Editor Controls */
+.layer-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background-color: var(--bg-main);
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+}
+
+.layer-controls-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.control-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.control-field label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.control-input {
+  width: 100%;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+}
+
+.control-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.color-picker {
+  height: 38px;
+  width: 50px;
+  padding: 2px;
+  cursor: pointer;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
 }
 
 /* Buttons */
@@ -169,11 +252,20 @@
   background-color: var(--primary-hover);
 }
 
+.btn-danger {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.3);
+}
+
 .btn-full {
   width: 100%;
 }
 
-/* Hidden File Input */
 .hidden-file-input {
   display: none;
 }
