@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import PreviewArea from "./components/PreviewArea";
 import Sidebar from "./components/Sidebar";
 import { exportMemeAsPng } from "./utils/exportMeme";
+import { exportMemeAsPdf } from "./utils/exportPdf";
 import {
     loadProjectFromStorage,
     saveProjectToStorage,
@@ -11,14 +12,12 @@ import {
 import "./App.css";
 
 export default function App() {
-    // Load saved state on mount safely
     const savedData = loadProjectFromStorage();
 
     const [image, setImage] = useState(savedData?.image || null);
     const [errorMessage, setErrorMessage] = useState(null);
     const [infoMessage, setInfoMessage] = useState(null);
 
-    // Layers State
     const [textLayers, setTextLayers] = useState(savedData?.textLayers || []);
     const [selectedTextId, setSelectedTextId] = useState(null);
     const [stickers, setStickers] = useState(savedData?.stickers || []);
@@ -26,7 +25,6 @@ export default function App() {
 
     const previewBoxRef = useRef(null);
 
-    // Convert uploaded image file to Base64 for persistent storage
     const handleImageSelect = (file) => {
         setErrorMessage(null);
         setInfoMessage(null);
@@ -41,7 +39,6 @@ export default function App() {
         reader.readAsDataURL(file);
     };
 
-    // --- Text Layer Handlers ---
     const handleAddText = () => {
         if (!image) {
             setErrorMessage("Please upload an image first before adding text.");
@@ -86,7 +83,6 @@ export default function App() {
         setSelectedTextId(null);
     };
 
-    // --- Sticker Handlers ---
     const handleAddSticker = (emoji) => {
         if (!image) {
             setErrorMessage(
@@ -128,7 +124,6 @@ export default function App() {
         setSelectedStickerId(null);
     };
 
-    // --- Local Storage Handlers ---
     const handleSaveProject = () => {
         setErrorMessage(null);
         setInfoMessage(null);
@@ -167,7 +162,7 @@ export default function App() {
         setTimeout(() => setInfoMessage(null), 2500);
     };
 
-    // --- Export Action Handler ---
+    // Export PNG
     const handleDownloadMeme = async () => {
         if (!image) {
             setErrorMessage("Please upload an image first before downloading.");
@@ -187,8 +182,35 @@ export default function App() {
                 filename: `meme-${Date.now()}.png`,
             });
         } catch (err) {
-            console.error("Export failed:", err);
-            setErrorMessage("Failed to export meme. Please try again.");
+            console.error("PNG export failed:", err);
+            setErrorMessage("Failed to export PNG. Please try again.");
+        }
+    };
+
+    // Export PDF
+    const handleDownloadPdf = async () => {
+        if (!image) {
+            setErrorMessage(
+                "Please upload an image first before exporting PDF.",
+            );
+            return;
+        }
+
+        try {
+            setErrorMessage(null);
+            setSelectedTextId(null);
+            setSelectedStickerId(null);
+
+            await exportMemeAsPdf({
+                containerElement: previewBoxRef.current,
+                imageUrl: image,
+                textLayers,
+                stickers,
+                filename: `meme-${Date.now()}.pdf`,
+            });
+        } catch (err) {
+            console.error("PDF export failed:", err);
+            setErrorMessage("Failed to export PDF. Please try again.");
         }
     };
 
@@ -199,7 +221,10 @@ export default function App() {
 
     return (
         <div className="editor-container">
-            <Header onDownloadClick={handleDownloadMeme} />
+            <Header
+                onDownloadPng={handleDownloadMeme}
+                onDownloadPdf={handleDownloadPdf}
+            />
 
             <div className="editor-body">
                 <PreviewArea
@@ -235,6 +260,7 @@ export default function App() {
                     onUpdateStickerSize={handleUpdateStickerSize}
                     onDeleteSticker={handleDeleteSticker}
                     onDownloadClick={handleDownloadMeme}
+                    onDownloadPdfClick={handleDownloadPdf}
                     onSaveProject={handleSaveProject}
                     onClearProject={handleClearProject}
                 />
