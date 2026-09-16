@@ -6,6 +6,10 @@ export default function Sidebar({
   hasImage,
   onImageSelect,
   onError,
+  onAddText,
+  selectedLayer,
+  onUpdateTextLayer,
+  onDeleteTextLayer,
   onPlaceholderClick,
 }) {
   const fileInputRef = useRef(null);
@@ -18,12 +22,14 @@ export default function Sidebar({
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
-    event.target.value = ''; // เคลียร์เพื่อให้เลือกไฟล์เดิมซ้ำได้
+    event.target.value = '';
 
     if (!file) return;
 
     if (!SUPPORTED_FORMATS.includes(file.type)) {
-      onError('Unsupported file format. Please upload a JPG, JPEG, PNG, or WEBP image.');
+      onError(
+        'Unsupported file format. Please upload a JPG, JPEG, PNG, or WEBP image.'
+      );
       return;
     }
 
@@ -55,7 +61,7 @@ export default function Sidebar({
         <button
           type="button"
           className="btn btn-secondary btn-full"
-          onClick={() => onPlaceholderClick('Add Text')}
+          onClick={onAddText}
         >
           🔤 Add Text
         </button>
@@ -68,6 +74,60 @@ export default function Sidebar({
           ⭐ Add Sticker
         </button>
       </div>
+
+      {/* Selected Text Layer Controls */}
+      {selectedLayer && (
+        <div className="layer-controls">
+          <h3 className="layer-controls-title">Edit Selected Text</h3>
+
+          <div className="control-field">
+            <label htmlFor="text-content">Text</label>
+            <input
+              id="text-content"
+              type="text"
+              className="control-input"
+              value={selectedLayer.text}
+              onChange={(e) => onUpdateTextLayer('text', e.target.value)}
+              placeholder="Enter text..."
+            />
+          </div>
+
+          <div className="control-row">
+            <div className="control-field" style={{ flex: 1 }}>
+              <label htmlFor="font-size">Size ({selectedLayer.fontSize}px)</label>
+              <input
+                id="font-size"
+                type="range"
+                min="14"
+                max="72"
+                value={selectedLayer.fontSize}
+                onChange={(e) =>
+                  onUpdateTextLayer('fontSize', Number(e.target.value))
+                }
+              />
+            </div>
+
+            <div className="control-field">
+              <label htmlFor="text-color">Color</label>
+              <input
+                id="text-color"
+                type="color"
+                className="color-picker"
+                value={selectedLayer.color}
+                onChange={(e) => onUpdateTextLayer('color', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-danger btn-full"
+            onClick={onDeleteTextLayer}
+          >
+            🗑️ Delete Text
+          </button>
+        </div>
+      )}
 
       <hr style={{ borderColor: 'var(--border-color)', margin: '0.5rem 0' }} />
 
