@@ -1,38 +1,44 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import Header from "./components/Header";
 import PreviewArea from "./components/PreviewArea";
 import Sidebar from "./components/Sidebar";
 import { exportMemeAsPng } from "./utils/exportMeme";
+import {
+    loadProjectFromStorage,
+    saveProjectToStorage,
+    clearProjectFromStorage,
+} from "./utils/storage";
 import "./App.css";
 
 export default function App() {
-    const [image, setImage] = useState(null);
+    // Load saved state on mount safely
+    const savedData = loadProjectFromStorage();
+
+    const [image, setImage] = useState(savedData?.image || null);
     const [errorMessage, setErrorMessage] = useState(null);
+    const [infoMessage, setInfoMessage] = useState(null);
 
     // Layers State
-    const [textLayers, setTextLayers] = useState([]);
+    const [textLayers, setTextLayers] = useState(savedData?.textLayers || []);
     const [selectedTextId, setSelectedTextId] = useState(null);
-    const [stickers, setStickers] = useState([]);
+    const [stickers, setStickers] = useState(savedData?.stickers || []);
     const [selectedStickerId, setSelectedStickerId] = useState(null);
 
-    // Ref สำหรับเข้าถึง DOM กล่อง Preview
     const previewBoxRef = useRef(null);
 
-    useEffect(() => {
-        return () => {
-            if (image) {
-                URL.revokeObjectURL(image);
-            }
-        };
-    }, [image]);
-
+    // Convert uploaded image file to Base64 for persistent storage
     const handleImageSelect = (file) => {
         setErrorMessage(null);
-        if (image) {
-            URL.revokeObjectURL(image);
-        }
-        const previewUrl = URL.createObjectURL(file);
-        setImage(previewUrl);
+        setInfoMessage(null);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setImage(e.target.result);
+        };
+        reader.onerror = () => {
+            setErrorMessage("Failed to read image file.");
+        };
+        reader.readAsDataURL(file);
     };
 
     // --- Text Layer Handlers ---
@@ -122,6 +128,45 @@ export default function App() {
         setSelectedStickerId(null);
     };
 
+    // --- Local Storage Handlers ---
+    const handleSaveProject = () => {
+        setErrorMessage(null);
+        setInfoMessage(null);
+
+        if (!image && textLayers.length === 0 && stickers.length === 0) {
+            setErrorMessage("No project content to save.");
+            return;
+        }
+
+        const result = saveProjectToStorage({ image, textLayers, stickers });
+        if (result.success) {
+            setInfoMessage(
+                "Project saved successfully! You can refresh safely.",
+            );
+            setTimeout(() => setInfoMessage(null), 3500);
+        } else {
+            setErrorMessage(result.error);
+        }
+    };
+
+    const handleClearProject = () => {
+        if (
+            !window.confirm("Are you sure you want to clear this meme project?")
+        ) {
+            return;
+        }
+
+        clearProjectFromStorage();
+        setImage(null);
+        setTextLayers([]);
+        setStickers([]);
+        setSelectedTextId(null);
+        setSelectedStickerId(null);
+        setErrorMessage(null);
+        setInfoMessage("Project cleared.");
+        setTimeout(() => setInfoMessage(null), 2500);
+    };
+
     // --- Export Action Handler ---
     const handleDownloadMeme = async () => {
         if (!image) {
@@ -131,7 +176,6 @@ export default function App() {
 
         try {
             setErrorMessage(null);
-            // เคลียร์ selection ชั่วคราวก่อนเริ่ม export
             setSelectedTextId(null);
             setSelectedStickerId(null);
 
@@ -161,7 +205,7 @@ export default function App() {
                 <PreviewArea
                     ref={previewBoxRef}
                     image={image}
-                    errorMessage={errorMessage}
+                    errorMessage={errorMessage || infoMessage}
                     textLayers={textLayers}
                     selectedTextId={selectedTextId}
                     onSelectText={(id) => {
@@ -191,6 +235,8 @@ export default function App() {
                     onUpdateStickerSize={handleUpdateStickerSize}
                     onDeleteSticker={handleDeleteSticker}
                     onDownloadClick={handleDownloadMeme}
+                    onSaveProject={handleSaveProject}
+                    onClearProject={handleClearProject}
                 />
             </div>
         </div>
