@@ -7,6 +7,7 @@ import {
     Download,
     Save,
     RotateCcw,
+    FileText,
 } from "lucide-react";
 import EmojiPicker from "./controls/EmojiPicker";
 import TextControls from "./controls/TextControls";
@@ -27,6 +28,7 @@ export default function Sidebar({
     onUpdateStickerSize,
     onDeleteSticker,
     onDownloadClick,
+    onDownloadPdfClick,
     onSaveProject,
     onClearProject,
 }) {
@@ -117,7 +119,7 @@ export default function Sidebar({
                 )}
             </div>
 
-            {/* Selected Text Layer Controls */}
+            {/* แผงแก้ไข Text */}
             {selectedLayer && (
                 <TextControls
                     layer={selectedLayer}
@@ -126,7 +128,7 @@ export default function Sidebar({
                 />
             )}
 
-            {/* Selected Sticker Layer Controls */}
+            {/* แผงแก้ไข Sticker */}
             {selectedSticker && (
                 <StickerControls
                     sticker={selectedSticker}
@@ -170,7 +172,7 @@ export default function Sidebar({
                 }}
             />
 
-            {/* Export / Download */}
+            {/* Export Controls */}
             <div className="tool-group">
                 <button
                     type="button"
@@ -178,7 +180,16 @@ export default function Sidebar({
                     onClick={onDownloadClick}
                 >
                     <Download size={18} />
-                    Download Meme
+                    Download PNG
+                </button>
+
+                <button
+                    type="button"
+                    className="btn btn-secondary btn-full"
+                    onClick={onDownloadPdfClick}
+                >
+                    <FileText size={18} />
+                    Export PDF
                 </button>
             </div>
         </aside>
