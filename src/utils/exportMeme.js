@@ -1,23 +1,19 @@
-/**
- * Export meme with High-Resolution scaling (Crisp text and sharp image)
- */
 export async function exportMemeAsPng({
     containerElement,
     imageUrl,
     textLayers,
     stickers,
+    filter = "none",
     filename = "meme.png",
 }) {
     if (!containerElement || !imageUrl) {
         throw new Error("Image or preview container missing.");
     }
 
-    // 1. ขนาดจริงของกล่องแสดงผลบน CSS (เช่น 500x500)
     const rect = containerElement.getBoundingClientRect();
     const cssWidth = rect.width;
     const cssHeight = rect.height;
 
-    // 2. ตัวคูณเพิ่มความคมชัด (2x - 3x เท่าของขนาดหน้าจอ)
     const scale = 2.5;
 
     const canvas = document.createElement("canvas");
@@ -29,11 +25,9 @@ export async function exportMemeAsPng({
         throw new Error("Could not get Canvas 2D context.");
     }
 
-    // เปิด Image Smoothing เพื่อให้ขอบภาพและฟอนต์เนียน
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
 
-    // 3. โหลดภาพต้นฉบับ
     const bgImg = new Image();
     bgImg.crossOrigin = "anonymous";
 
@@ -43,11 +37,9 @@ export async function exportMemeAsPng({
         bgImg.src = imageUrl;
     });
 
-    // เติมพื้นหลังสีเดียวกับกรอบ Preview
     ctx.fillStyle = "#0b1120";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // คำนวณ aspect ratio ให้อยู่ตรงกลางตามแบบ object-fit: contain
     const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
     const canvasRatio = cssWidth / cssHeight;
 
@@ -64,7 +56,9 @@ export async function exportMemeAsPng({
         offsetX = (cssWidth - renderWidth) / 2;
     }
 
-    // วาดรูปพื้นหลังตาม Scale ที่ขยาย
+    // วาดภาพพื้นหลังพร้อม Filter โดยใช้ ctx.save() / ctx.restore()
+    ctx.save();
+    ctx.filter = filter;
     ctx.drawImage(
         bgImg,
         offsetX * scale,
@@ -72,8 +66,9 @@ export async function exportMemeAsPng({
         renderWidth * scale,
         renderHeight * scale,
     );
+    ctx.restore();
 
-    // 4. วาด Stickers / Emojis (ขยายขนาดและตำแหน่งตาม scale)
+    // วาด Stickers
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
 
@@ -83,26 +78,23 @@ export async function exportMemeAsPng({
         ctx.fillText(sticker.emoji, sticker.x * scale, sticker.y * scale);
     });
 
-    // 5. วาด Text Layers (ขยาย Stroke และ Font ให้คมกริบ)
+    // วาด Text Layers
     textLayers.forEach((layer) => {
         const scaledFontSize = (layer.fontSize || 36) * scale;
         ctx.font = `900 ${scaledFontSize}px Impact, "Arial Black", sans-serif`;
         ctx.textBaseline = "top";
         ctx.textAlign = "left";
 
-        // ขอบ Stroke ดำหนาขึ้นตามสเกล
         ctx.strokeStyle = "#000000";
         ctx.lineWidth = Math.max(4, scaledFontSize / 8);
         ctx.lineJoin = "miter";
         ctx.miterLimit = 2;
         ctx.strokeText(layer.text, layer.x * scale, layer.y * scale);
 
-        // สีตัวอักษร
         ctx.fillStyle = layer.color || "#ffffff";
         ctx.fillText(layer.text, layer.x * scale, layer.y * scale);
     });
 
-    // 6. ดาวน์โหลดไฟล์ PNG
     const dataUrl = canvas.toDataURL("image/png", 1.0);
     const downloadLink = document.createElement("a");
     downloadLink.download = filename;

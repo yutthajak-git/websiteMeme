@@ -1,11 +1,35 @@
-import { Trash2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 
-export default function TextControls({ layer, onUpdate, onDelete }) {
+export default function TextControls({ layer, onUpdate, onDelete, onClose }) {
     if (!layer) return null;
 
     return (
         <div className="layer-controls">
-            <h3 className="layer-controls-title">Edit Selected Text</h3>
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                }}
+            >
+                <h3 className="layer-controls-title">Edit Selected Text</h3>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--text-muted)",
+                        cursor: "pointer",
+                        padding: "2px",
+                        display: "flex",
+                        alignItems: "center",
+                    }}
+                    title="Close text editor"
+                >
+                    <X size={16} />
+                </button>
+            </div>
 
             <div className="control-field">
                 <label htmlFor="text-content">Text</label>
@@ -53,7 +77,7 @@ export default function TextControls({ layer, onUpdate, onDelete }) {
             >
                 <Trash2 size={16} />
                 Delete Text
-            </button>   
+            </button>
         </div>
     );
 }

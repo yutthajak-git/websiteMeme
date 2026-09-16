@@ -1,8 +1,5 @@
 const STORAGE_KEY = "meme_project_data";
 
-/**
- * Safely load saved project data from browser localStorage.
- */
 export function loadProjectFromStorage() {
     try {
         const rawData = localStorage.getItem(STORAGE_KEY);
@@ -12,6 +9,7 @@ export function loadProjectFromStorage() {
 
         return {
             image: typeof parsed.image === "string" ? parsed.image : null,
+            filter: typeof parsed.filter === "string" ? parsed.filter : "none",
             textLayers: Array.isArray(parsed.textLayers)
                 ? parsed.textLayers
                 : [],
@@ -26,13 +24,11 @@ export function loadProjectFromStorage() {
     }
 }
 
-/**
- * Save project data to localStorage with quota-exceeded safeguard.
- */
-export function saveProjectToStorage({ image, textLayers, stickers }) {
+export function saveProjectToStorage({ image, filter, textLayers, stickers }) {
     try {
         const payload = JSON.stringify({
             image,
+            filter: filter || "none",
             textLayers,
             stickers,
             savedAt: Date.now(),
@@ -55,9 +51,6 @@ export function saveProjectToStorage({ image, textLayers, stickers }) {
     }
 }
 
-/**
- * Remove saved project data from localStorage.
- */
 export function clearProjectFromStorage() {
     try {
         localStorage.removeItem(STORAGE_KEY);

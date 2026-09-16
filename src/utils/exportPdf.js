@@ -5,6 +5,7 @@ export async function exportMemeAsPdf({
     imageUrl,
     textLayers,
     stickers,
+    filter = "none",
     filename = "meme.pdf",
 }) {
     if (!containerElement || !imageUrl) {
@@ -15,7 +16,6 @@ export async function exportMemeAsPdf({
     const cssWidth = rect.width;
     const cssHeight = rect.height;
 
-    // ขยาย Canvas 2.5x เพื่อความคมชัดสูง
     const scale = 2.5;
 
     const canvas = document.createElement("canvas");
@@ -58,6 +58,8 @@ export async function exportMemeAsPdf({
         offsetX = (cssWidth - renderWidth) / 2;
     }
 
+    ctx.save();
+    ctx.filter = filter;
     ctx.drawImage(
         bgImg,
         offsetX * scale,
@@ -65,8 +67,8 @@ export async function exportMemeAsPdf({
         renderWidth * scale,
         renderHeight * scale,
     );
+    ctx.restore();
 
-    // Stickers
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
 
@@ -76,7 +78,6 @@ export async function exportMemeAsPdf({
         ctx.fillText(sticker.emoji, sticker.x * scale, sticker.y * scale);
     });
 
-    // Text Layers
     textLayers.forEach((layer) => {
         const scaledFontSize = (layer.fontSize || 36) * scale;
         ctx.font = `900 ${scaledFontSize}px Impact, "Arial Black", sans-serif`;
@@ -93,13 +94,12 @@ export async function exportMemeAsPdf({
         ctx.fillText(layer.text, layer.x * scale, layer.y * scale);
     });
 
-    // แปลงภาพ High-Res ลงหน้ากระดาษ PDF
     const imgData = canvas.toDataURL("image/png", 1.0);
 
     const pdf = new jsPDF({
         orientation: cssWidth > cssHeight ? "landscape" : "portrait",
         unit: "px",
-        format: [cssWidth, cssHeight], // ขอบเขตหน้ากระดาษเท่าเดิม แต่ภาพความละเอียดสูงขึ้น
+        format: [cssWidth, cssHeight],
     });
 
     pdf.addImage(imgData, "PNG", 0, 0, cssWidth, cssHeight);
