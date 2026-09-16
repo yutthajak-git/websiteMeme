@@ -1,6 +1,6 @@
 import { Sliders, ChevronDown, ChevronUp } from "lucide-react";
 
-export const FILTERS = [
+const FILTERS = [
     { name: "Normal", value: "none" },
     { name: "Grayscale", value: "grayscale(100%)" },
     { name: "Sepia", value: "sepia(80%)" },
