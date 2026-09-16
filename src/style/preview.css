@@ -1,0 +1,130 @@
+/* Preview / Canvas Stage */
+.preview-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--bg-main);
+  overflow: auto;
+  gap: 1rem;
+}
+
+/* Canvas Container */
+.meme-canvas-placeholder {
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 1 / 1;
+  background-color: var(--bg-surface);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+
+.meme-canvas-placeholder.has-image {
+  border-style: solid;
+  padding: 0;
+  background-color: #0b1120;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.placeholder-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.placeholder-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.placeholder-content p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* Text Layers Overlay */
+.meme-text-layer {
+  position: absolute;
+  cursor: grab;
+  font-family: Impact, -apple-system, sans-serif;
+  text-transform: uppercase;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+  padding: 4px 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 90%;
+  touch-action: none;
+}
+
+.meme-text-layer:active {
+  cursor: grabbing;
+}
+
+.meme-text-layer.selected {
+  outline: 2px dashed #6366f1;
+  outline-offset: 4px;
+}
+
+/* Sticker Overlay Layer */
+.meme-sticker-layer {
+  position: absolute;
+  cursor: grab;
+  line-height: 1;
+  user-select: none;
+  touch-action: none;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meme-sticker-layer:active {
+  cursor: grabbing;
+}
+
+.meme-sticker-layer.selected {
+  outline: 2px dashed #6366f1;
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* Error Banner */
+.error-banner {
+  max-width: 500px;
+  width: 100%;
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  text-align: center;
+}
