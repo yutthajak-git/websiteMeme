@@ -1,5 +1,13 @@
 import { useRef, useState } from "react";
-import { ImagePlus, Type, Sparkles, X, Download } from "lucide-react";
+import {
+    ImagePlus,
+    Type,
+    Sparkles,
+    X,
+    Download,
+    Save,
+    RotateCcw,
+} from "lucide-react";
 import EmojiPicker from "./controls/EmojiPicker";
 import TextControls from "./controls/TextControls";
 import StickerControls from "./controls/StickerControls";
@@ -18,8 +26,9 @@ export default function Sidebar({
     selectedSticker,
     onUpdateStickerSize,
     onDeleteSticker,
-
     onDownloadClick,
+    onSaveProject,
+    onClearProject,
 }) {
     const fileInputRef = useRef(null);
     const [showStickerPicker, setShowStickerPicker] = useState(false);
@@ -108,7 +117,7 @@ export default function Sidebar({
                 )}
             </div>
 
-            {/* แผงแก้ไข Text */}
+            {/* Selected Text Layer Controls */}
             {selectedLayer && (
                 <TextControls
                     layer={selectedLayer}
@@ -117,7 +126,7 @@ export default function Sidebar({
                 />
             )}
 
-            {/* แผงแก้ไข Sticker */}
+            {/* Selected Sticker Layer Controls */}
             {selectedSticker && (
                 <StickerControls
                     sticker={selectedSticker}
@@ -133,6 +142,35 @@ export default function Sidebar({
                 }}
             />
 
+            {/* Storage Controls */}
+            <div className="tool-group">
+                <button
+                    type="button"
+                    className="btn btn-secondary btn-full"
+                    onClick={onSaveProject}
+                >
+                    <Save size={18} />
+                    Save Project
+                </button>
+
+                <button
+                    type="button"
+                    className="btn btn-danger btn-full"
+                    onClick={onClearProject}
+                >
+                    <RotateCcw size={18} />
+                    Clear Project
+                </button>
+            </div>
+
+            <hr
+                style={{
+                    borderColor: "var(--border-color)",
+                    margin: "0.5rem 0",
+                }}
+            />
+
+            {/* Export / Download */}
             <div className="tool-group">
                 <button
                     type="button"
