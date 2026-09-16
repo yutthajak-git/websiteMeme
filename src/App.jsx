@@ -37,7 +37,6 @@ export default function App() {
     ]);
     const [historyIndex, setHistoryIndex] = useState(0);
 
-    // ฟังก์ชันบันทึกก้าวใหม่ลง History
     const pushHistory = (newState) => {
         const updated = {
             image,
@@ -80,11 +79,15 @@ export default function App() {
     // Upload Image
     const handleImageSelect = (file) => {
         setErrorMessage(null);
+        setInfoMessage(null);
         const reader = new FileReader();
         reader.onload = (e) => {
             const newImg = e.target.result;
             setImage(newImg);
             pushHistory({ image: newImg });
+        };
+        reader.onerror = () => {
+            setErrorMessage("Failed to read image file.");
         };
         reader.readAsDataURL(file);
     };
@@ -101,6 +104,7 @@ export default function App() {
             setErrorMessage("Please upload an image first before adding text.");
             return;
         }
+        setErrorMessage(null);
         const newLayer = {
             id: Date.now(),
             text: textLayers.length === 0 ? "TOP TEXT" : "BOTTOM TEXT",
@@ -147,6 +151,7 @@ export default function App() {
             );
             return;
         }
+        setErrorMessage(null);
         const newSticker = { id: Date.now(), emoji, x: 180, y: 180, size: 48 };
         const updated = [...stickers, newSticker];
         setStickers(updated);
@@ -176,11 +181,30 @@ export default function App() {
         pushHistory({ stickers: updated });
     };
 
+    // Drag Finish Handler (บันทึก Snapshot ลงประวัติเมื่อปล่อยเมาส์)
+    const handleEndDrag = () => {
+        pushHistory({ textLayers, stickers });
+    };
+
     // Save / Clear
     const handleSaveProject = () => {
-        saveProjectToStorage({ image, filter, textLayers, stickers });
-        setInfoMessage("Project saved!");
-        setTimeout(() => setInfoMessage(null), 2500);
+        if (!image && textLayers.length === 0 && stickers.length === 0) {
+            setErrorMessage("No project content to save.");
+            return;
+        }
+
+        const result = saveProjectToStorage({
+            image,
+            filter,
+            textLayers,
+            stickers,
+        });
+        if (result.success) {
+            setInfoMessage("Project saved!");
+            setTimeout(() => setInfoMessage(null), 2500);
+        } else {
+            setErrorMessage(result.error);
+        }
     };
 
     const handleClearProject = () => {
@@ -192,6 +216,9 @@ export default function App() {
             setStickers([]);
             setSelectedTextId(null);
             setSelectedStickerId(null);
+            setErrorMessage(null);
+            setInfoMessage("Project cleared.");
+            setTimeout(() => setInfoMessage(null), 2500);
             pushHistory({
                 image: null,
                 filter: "none",
@@ -204,26 +231,42 @@ export default function App() {
     // Export Handlers
     const handleDownloadMeme = async () => {
         if (!image) return setErrorMessage("Upload image first");
-        await exportMemeAsPng({
-            containerElement: previewBoxRef.current,
-            imageUrl: image,
-            textLayers,
-            stickers,
-            filter,
-            filename: `meme-${Date.now()}.png`,
-        });
+        try {
+            setErrorMessage(null);
+            setSelectedTextId(null);
+            setSelectedStickerId(null);
+            await exportMemeAsPng({
+                containerElement: previewBoxRef.current,
+                imageUrl: image,
+                textLayers,
+                stickers,
+                filter,
+                filename: `meme-${Date.now()}.png`,
+            });
+        } catch (err) {
+            console.error(err);
+            setErrorMessage("Failed to export PNG.");
+        }
     };
 
     const handleDownloadPdf = async () => {
         if (!image) return setErrorMessage("Upload image first");
-        await exportMemeAsPdf({
-            containerElement: previewBoxRef.current,
-            imageUrl: image,
-            textLayers,
-            stickers,
-            filter,
-            filename: `meme-${Date.now()}.pdf`,
-        });
+        try {
+            setErrorMessage(null);
+            setSelectedTextId(null);
+            setSelectedStickerId(null);
+            await exportMemeAsPdf({
+                containerElement: previewBoxRef.current,
+                imageUrl: image,
+                textLayers,
+                stickers,
+                filter,
+                filename: `meme-${Date.now()}.pdf`,
+            });
+        } catch (err) {
+            console.error(err);
+            setErrorMessage("Failed to export PDF.");
+        }
     };
 
     const selectedLayer = textLayers.find((l) => l.id === selectedTextId);
@@ -231,14 +274,7 @@ export default function App() {
 
     return (
         <div className="editor-container">
-            <Header
-                canUndo={historyIndex > 0}
-                canRedo={historyIndex < history.length - 1}
-                onUndo={handleUndo}
-                onRedo={handleRedo}
-                onDownloadPng={handleDownloadMeme}
-                onDownloadPdf={handleDownloadPdf}
-            />
+            <Header />
 
             <div className="editor-body">
                 <PreviewArea
@@ -253,6 +289,7 @@ export default function App() {
                         if (id) setSelectedStickerId(null);
                     }}
                     onUpdateTextPosition={handleUpdateTextPosition}
+                    onEndTextDrag={handleEndDrag}
                     stickers={stickers}
                     selectedStickerId={selectedStickerId}
                     onSelectSticker={(id) => {
@@ -260,22 +297,29 @@ export default function App() {
                         if (id) setSelectedTextId(null);
                     }}
                     onUpdateStickerPosition={handleUpdateStickerPosition}
+                    onEndStickerDrag={handleEndDrag}
                 />
 
                 <Sidebar
                     hasImage={Boolean(image)}
-                    filter={filter}
-                    onSelectFilter={handleSelectFilter}
                     onImageSelect={handleImageSelect}
                     onError={setErrorMessage}
+                    filter={filter}
+                    onSelectFilter={handleSelectFilter}
                     onAddText={handleAddText}
                     selectedLayer={selectedLayer}
                     onUpdateTextLayer={handleUpdateTextLayer}
                     onDeleteTextLayer={handleDeleteTextLayer}
+                    onDeselectText={() => setSelectedTextId(null)}
                     onAddSticker={handleAddSticker}
                     selectedSticker={selectedSticker}
                     onUpdateStickerSize={handleUpdateStickerSize}
                     onDeleteSticker={handleDeleteSticker}
+                    onDeselectSticker={() => setSelectedStickerId(null)}
+                    canUndo={historyIndex > 0}
+                    canRedo={historyIndex < history.length - 1}
+                    onUndo={handleUndo}
+                    onRedo={handleRedo}
                     onDownloadClick={handleDownloadMeme}
                     onDownloadPdfClick={handleDownloadPdf}
                     onSaveProject={handleSaveProject}

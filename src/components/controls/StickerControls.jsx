@@ -1,13 +1,42 @@
-import { Trash2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 
-export default function StickerControls({ sticker, onUpdateSize, onDelete }) {
+export default function StickerControls({
+    sticker,
+    onUpdateSize,
+    onDelete,
+    onClose,
+}) {
     if (!sticker) return null;
 
     return (
         <div className="layer-controls">
-            <h3 className="layer-controls-title">
-                Edit Sticker {sticker.emoji}
-            </h3>
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                }}
+            >
+                <h3 className="layer-controls-title">
+                    Edit Sticker {sticker.emoji}
+                </h3>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--text-muted)",
+                        cursor: "pointer",
+                        padding: "2px",
+                        display: "flex",
+                        alignItems: "center",
+                    }}
+                    title="Close sticker editor"
+                >
+                    <X size={16} />
+                </button>
+            </div>
 
             <div className="control-field">
                 <label htmlFor="sticker-size">
@@ -29,7 +58,7 @@ export default function StickerControls({ sticker, onUpdateSize, onDelete }) {
                 onClick={onDelete}
             >
                 <Trash2 size={16} />
-                Delete Sticker  
+                Delete Sticker
             </button>
         </div>
     );

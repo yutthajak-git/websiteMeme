@@ -114,8 +114,13 @@ const PreviewArea = forwardRef(function PreviewArea(
                                 }
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    onSelectText(layer.id);
-                                    onSelectSticker(null);
+                                    // ถ้ากดตัวเดิมซ้ำ ให้ยกเลิกการเลือก (ปิดเมนู)
+                                    if (selectedTextId === layer.id) {
+                                        onSelectText(null);
+                                    } else {
+                                        onSelectText(layer.id);
+                                        onSelectSticker(null);
+                                    }
                                 }}
                                 className={`meme-text-layer ${
                                     selectedTextId === layer.id
@@ -147,8 +152,13 @@ const PreviewArea = forwardRef(function PreviewArea(
                                 }
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    onSelectSticker(sticker.id);
-                                    onSelectText(null);
+                                    // ถ้ากดสติกเกอร์ตัวเดิมซ้ำ ให้ยกเลิกการเลือก (ปิดเมนู)
+                                    if (selectedStickerId === sticker.id) {
+                                        onSelectSticker(null);
+                                    } else {
+                                        onSelectSticker(sticker.id);
+                                        onSelectText(null);
+                                    }
                                 }}
                                 className={`meme-sticker-layer ${
                                     selectedStickerId === sticker.id

@@ -8,6 +8,8 @@ import {
     Save,
     RotateCcw,
     FileText,
+    Undo2,
+    Redo2,
 } from "lucide-react";
 import EmojiPicker from "./controls/EmojiPicker";
 import TextControls from "./controls/TextControls";
@@ -26,10 +28,16 @@ export default function Sidebar({
     selectedLayer,
     onUpdateTextLayer,
     onDeleteTextLayer,
+    onDeselectText,
     onAddSticker,
     selectedSticker,
     onUpdateStickerSize,
     onDeleteSticker,
+    onDeselectSticker,
+    canUndo,
+    canRedo,
+    onUndo,
+    onRedo,
     onDownloadClick,
     onDownloadPdfClick,
     onSaveProject,
@@ -37,6 +45,7 @@ export default function Sidebar({
 }) {
     const fileInputRef = useRef(null);
     const [showStickerPicker, setShowStickerPicker] = useState(false);
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
     const handleUploadBtnClick = () => {
         if (fileInputRef.current) {
@@ -65,10 +74,66 @@ export default function Sidebar({
         setShowStickerPicker(false);
     };
 
+    const toggleStickerPicker = () => {
+        if (!hasImage) {
+            onError("Please upload an image first before adding stickers.");
+            return;
+        }
+        setShowStickerPicker((prev) => !prev);
+        if (!showStickerPicker) setShowFilterDropdown(false);
+    };
+
+    const toggleFilterDropdown = () => {
+        setShowFilterDropdown((prev) => !prev);
+        if (!showFilterDropdown) setShowStickerPicker(false);
+    };
+
     return (
         <aside className="sidebar">
-            <h2 className="sidebar-title">Toolbar</h2>
+            {/* Undo / Redo Header Row */}
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                }}
+            >
+                <h2 className="sidebar-title" style={{ margin: 0 }}>
+                    Toolbar
+                </h2>
+                <div style={{ display: "flex", gap: "0.35rem" }}>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={onUndo}
+                        disabled={!canUndo}
+                        style={{
+                            padding: "0.35rem 0.6rem",
+                            opacity: canUndo ? 1 : 0.35,
+                            cursor: canUndo ? "pointer" : "not-allowed",
+                        }}
+                        title="Undo"
+                    >
+                        <Undo2 size={16} />
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={onRedo}
+                        disabled={!canRedo}
+                        style={{
+                            padding: "0.35rem 0.6rem",
+                            opacity: canRedo ? 1 : 0.35,
+                            cursor: canRedo ? "pointer" : "not-allowed",
+                        }}
+                        title="Redo"
+                    >
+                        <Redo2 size={16} />
+                    </button>
+                </div>
+            </div>
 
+            {/* Action Tools */}
             <div className="tool-group">
                 <input
                     type="file"
@@ -98,23 +163,15 @@ export default function Sidebar({
 
                 <button
                     type="button"
-                    className="btn btn-secondary btn-full"
-                    onClick={() => {
-                        if (!hasImage) {
-                            onError(
-                                "Please upload an image first before adding stickers.",
-                            );
-                            return;
-                        }
-                        setShowStickerPicker((prev) => !prev);
-                    }}
+                    className={`btn btn-secondary btn-full ${showStickerPicker ? "btn-primary" : ""}`}
+                    onClick={toggleStickerPicker}
                 >
                     {showStickerPicker ? (
                         <X size={18} />
                     ) : (
                         <Sparkles size={18} />
                     )}
-                    {showStickerPicker ? "Close Picker" : "Add Sticker"}
+                    {showStickerPicker ? "Close Stickers" : "Add Sticker"}
                 </button>
 
                 {showStickerPicker && (
@@ -122,40 +179,44 @@ export default function Sidebar({
                 )}
             </div>
 
-            {/* แผงแก้ไข Text */}
+            {/* Edit Selected Text Layer */}
             {selectedLayer && (
                 <TextControls
                     layer={selectedLayer}
                     onUpdate={onUpdateTextLayer}
                     onDelete={onDeleteTextLayer}
+                    onClose={onDeselectText}
                 />
             )}
 
-            {/* แผงแก้ไข Sticker */}
+            {/* Edit Selected Sticker Layer */}
             {selectedSticker && (
                 <StickerControls
                     sticker={selectedSticker}
                     onUpdateSize={onUpdateStickerSize}
                     onDelete={onDeleteSticker}
+                    onClose={onDeselectSticker}
                 />
             )}
 
-            {/* แผงเลือกฟิลเตอร์ภาพ */}
+            {/* Image Filter */}
             {hasImage && (
                 <FilterControls
                     currentFilter={filter}
                     onSelectFilter={onSelectFilter}
+                    isOpen={showFilterDropdown}
+                    onToggle={toggleFilterDropdown}
                 />
             )}
 
             <hr
                 style={{
                     borderColor: "var(--border-color)",
-                    margin: "0.5rem 0",
+                    margin: "0.25rem 0",
                 }}
             />
 
-            {/* Storage Controls */}
+            {/* Project Storage */}
             <div className="tool-group">
                 <button
                     type="button"
@@ -179,11 +240,11 @@ export default function Sidebar({
             <hr
                 style={{
                     borderColor: "var(--border-color)",
-                    margin: "0.5rem 0",
+                    margin: "0.25rem 0",
                 }}
             />
 
-            {/* Export Controls */}
+            {/* Export / Download Buttons */}
             <div className="tool-group">
                 <button
                     type="button"
