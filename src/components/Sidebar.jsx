@@ -1,4 +1,7 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import EmojiPicker from './controls/EmojiPicker';
+import TextControls from './controls/TextControls';
+import StickerControls from './controls/StickerControls';
 
 const SUPPORTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -10,9 +13,14 @@ export default function Sidebar({
   selectedLayer,
   onUpdateTextLayer,
   onDeleteTextLayer,
+  onAddSticker,
+  selectedSticker,
+  onUpdateStickerSize,
+  onDeleteSticker,
   onPlaceholderClick,
 }) {
   const fileInputRef = useRef(null);
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
 
   const handleUploadBtnClick = () => {
     if (fileInputRef.current) {
@@ -36,12 +44,16 @@ export default function Sidebar({
     onImageSelect(file);
   };
 
+  const handleEmojiSelect = (emoji) => {
+    onAddSticker(emoji);
+    setShowStickerPicker(false);
+  };
+
   return (
     <aside className="sidebar">
       <h2 className="sidebar-title">Toolbar</h2>
 
       <div className="tool-group">
-        {/* Hidden File Input */}
         <input
           type="file"
           ref={fileInputRef}
@@ -69,64 +81,39 @@ export default function Sidebar({
         <button
           type="button"
           className="btn btn-secondary btn-full"
-          onClick={() => onPlaceholderClick('Add Sticker')}
+          onClick={() => {
+            if (!hasImage) {
+              onError('Please upload an image first before adding stickers.');
+              return;
+            }
+            setShowStickerPicker((prev) => !prev);
+          }}
         >
-          ⭐ Add Sticker
+          ⭐ {showStickerPicker ? 'Close Picker' : 'Add Sticker'}
         </button>
+
+        {/* เรียกใช้ EmojiPicker Component */}
+        {showStickerPicker && (
+          <EmojiPicker onSelectEmoji={handleEmojiSelect} />
+        )}
       </div>
 
-      {/* Selected Text Layer Controls */}
+      {/* แผงแก้ไข Text */}
       {selectedLayer && (
-        <div className="layer-controls">
-          <h3 className="layer-controls-title">Edit Selected Text</h3>
+        <TextControls
+          layer={selectedLayer}
+          onUpdate={onUpdateTextLayer}
+          onDelete={onDeleteTextLayer}
+        />
+      )}
 
-          <div className="control-field">
-            <label htmlFor="text-content">Text</label>
-            <input
-              id="text-content"
-              type="text"
-              className="control-input"
-              value={selectedLayer.text}
-              onChange={(e) => onUpdateTextLayer('text', e.target.value)}
-              placeholder="Enter text..."
-            />
-          </div>
-
-          <div className="control-row">
-            <div className="control-field" style={{ flex: 1 }}>
-              <label htmlFor="font-size">Size ({selectedLayer.fontSize}px)</label>
-              <input
-                id="font-size"
-                type="range"
-                min="14"
-                max="72"
-                value={selectedLayer.fontSize}
-                onChange={(e) =>
-                  onUpdateTextLayer('fontSize', Number(e.target.value))
-                }
-              />
-            </div>
-
-            <div className="control-field">
-              <label htmlFor="text-color">Color</label>
-              <input
-                id="text-color"
-                type="color"
-                className="color-picker"
-                value={selectedLayer.color}
-                onChange={(e) => onUpdateTextLayer('color', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="btn btn-danger btn-full"
-            onClick={onDeleteTextLayer}
-          >
-            🗑️ Delete Text
-          </button>
-        </div>
+      {/* แผงแก้ไข Sticker */}
+      {selectedSticker && (
+        <StickerControls
+          sticker={selectedSticker}
+          onUpdateSize={onUpdateStickerSize}
+          onDelete={onDeleteSticker}
+        />
       )}
 
       <hr style={{ borderColor: 'var(--border-color)', margin: '0.5rem 0' }} />

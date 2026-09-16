@@ -286,3 +286,109 @@
     padding: 1.5rem;
   }
 }
+
+/* Sticker Overlay Layer */
+.meme-sticker-layer {
+  position: absolute;
+  cursor: grab;
+  line-height: 1;
+  user-select: none;
+  touch-action: none;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meme-sticker-layer:active {
+  cursor: grabbing;
+}
+
+.meme-sticker-layer.selected {
+  outline: 2px dashed #6366f1;
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* Emoji Picker Dropdown / Box */
+.sticker-picker-box {
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sticker-picker-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.emoji-btn {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  font-size: 1.5rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease, background-color 0.15s ease;
+}
+
+.emoji-btn:hover {
+  background-color: var(--bg-surface-hover);
+  transform: scale(1.1);
+}
+
+/* Emoji Category Tabs */
+.emoji-tabs {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.emoji-tab-btn {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.emoji-tab-btn:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-main);
+}
+
+.emoji-tab-btn.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+/* ปรับให้กริดรองรับการเลื่อนกรณีอีโมจิเยอะ */
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}

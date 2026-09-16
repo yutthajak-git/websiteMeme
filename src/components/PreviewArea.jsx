@@ -1,118 +1,149 @@
-import { useRef } from "react";
+import { useRef } from 'react';
 
 export default function PreviewArea({
-    image,
-    errorMessage,
-    textLayers,
-    selectedTextId,
-    onSelectText,
-    onUpdateTextPosition,
+  image,
+  errorMessage,
+  textLayers,
+  selectedTextId,
+  onSelectText,
+  onUpdateTextPosition,
+  stickers,
+  selectedStickerId,
+  onSelectSticker,
+  onUpdateStickerPosition,
 }) {
-    const containerRef = useRef(null);
+  const containerRef = useRef(null);
 
-    const handleMouseDown = (e, layer) => {
-        // ป้องกันไม่ให้ event ทะลุไปตัวแม่
-        e.stopPropagation();
+  // Generic drag handler for any movable layer (Text or Sticker)
+  const handleItemMouseDown = (e, item, onUpdatePosition, onSelect) => {
+    e.stopPropagation();
+    onSelect(item.id);
 
-        // เลือก Layer ทันทีตั้งแต่กดเมาส์ลงไป
-        onSelectText(layer.id);
+    if (!containerRef.current) return;
 
-        if (!containerRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const startMouseX = e.clientX;
+    const startMouseY = e.clientY;
+    const initialX = item.x;
+    const initialY = item.y;
 
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const startMouseX = e.clientX;
-        const startMouseY = e.clientY;
-        const initialLayerX = layer.x;
-        const initialLayerY = layer.y;
+    const handleMouseMove = (moveEvent) => {
+      const deltaX = moveEvent.clientX - startMouseX;
+      const deltaY = moveEvent.clientY - startMouseY;
 
-        const handleMouseMove = (moveEvent) => {
-            const deltaX = moveEvent.clientX - startMouseX;
-            const deltaY = moveEvent.clientY - startMouseY;
+      let newX = initialX + deltaX;
+      let newY = initialY + deltaY;
 
-            let newX = initialLayerX + deltaX;
-            let newY = initialLayerY + deltaY;
+      newX = Math.max(0, Math.min(newX, containerRect.width - 40));
+      newY = Math.max(0, Math.min(newY, containerRect.height - 40));
 
-            // ล็อกขอบเขตไม่ให้ลากหลุดนอกกรอบ
-            newX = Math.max(0, Math.min(newX, containerRect.width - 40));
-            newY = Math.max(0, Math.min(newY, containerRect.height - 40));
-
-            onUpdateTextPosition(layer.id, newX, newY);
-        };
-
-        const handleMouseUp = () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-            window.removeEventListener("mouseup", handleMouseUp);
-        };
-
-        window.addEventListener("mousemove", handleMouseMove);
-        window.addEventListener("mouseup", handleMouseUp);
+      onUpdatePosition(item.id, newX, newY);
     };
 
-    const handleTextClick = (e, layerId) => {
-        // สำคัญมาก: หยุดการส่ง event ไปหา handleContainerClick
-        e.stopPropagation();
-        onSelectText(layerId);
+    const handleMouseUp = () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
     };
 
-    const handleContainerClick = (e) => {
-        // ยกเลิกการเลือกเฉพาะตอนคลิกที่พื้นที่ว่างจริง ๆ (ไม่ใช่คลิกโดนข้อความ)
-        if (
-            e.target === containerRef.current ||
-            e.target.classList.contains("preview-image")
-        ) {
-            onSelectText(null);
-        }
-    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
 
-    return (
-        <main className="preview-area">
-            {errorMessage && (
-                <div className="error-banner" role="alert">
-                    {errorMessage}
-                </div>
-            )}
+  const handleContainerClick = (e) => {
+    if (
+      e.target === containerRef.current ||
+      e.target.classList.contains('preview-image')
+    ) {
+      onSelectText(null);
+      onSelectSticker(null);
+    }
+  };
 
-            <div
-                ref={containerRef}
-                onClick={handleContainerClick}
-                className={`meme-canvas-placeholder ${image ? "has-image" : ""}`}
-            >
-                {image ? (
-                    <>
-                        <img
-                            src={image}
-                            alt="Selected Meme Preview"
-                            className="preview-image"
-                        />
-                        {textLayers.map((layer) => (
-                            <div
-                                key={layer.id}
-                                onMouseDown={(e) => handleMouseDown(e, layer)}
-                                onClick={(e) => handleTextClick(e, layer.id)}
-                                className={`meme-text-layer ${
-                                    selectedTextId === layer.id
-                                        ? "selected"
-                                        : ""
-                                }`}
-                                style={{
-                                    left: `${layer.x}px`,
-                                    top: `${layer.y}px`,
-                                    fontSize: `${layer.fontSize}px`,
-                                    color: layer.color,
-                                }}
-                            >
-                                {layer.text}
-                            </div>
-                        ))}
-                    </>
-                ) : (
-                    <div className="placeholder-content">
-                        <span className="placeholder-icon">🖼️</span>
-                        <h3>Preview Area</h3>
-                        <p>Upload an image to start creating your meme</p>
-                    </div>
-                )}
-            </div>
-        </main>
-    );
+  return (
+    <main className="preview-area">
+      {errorMessage && (
+        <div className="error-banner" role="alert">
+          {errorMessage}
+        </div>
+      )}
+
+      <div
+        ref={containerRef}
+        onClick={handleContainerClick}
+        className={`meme-canvas-placeholder ${image ? 'has-image' : ''}`}
+      >
+        {image ? (
+          <>
+            <img
+              src={image}
+              alt="Selected Meme Preview"
+              className="preview-image"
+            />
+
+            {/* Render Text Layers */}
+            {textLayers.map((layer) => (
+              <div
+                key={layer.id}
+                onMouseDown={(e) =>
+                  handleItemMouseDown(e, layer, onUpdateTextPosition, onSelectText)
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectText(layer.id);
+                  onSelectSticker(null);
+                }}
+                className={`meme-text-layer ${
+                  selectedTextId === layer.id ? 'selected' : ''
+                }`}
+                style={{
+                  left: `${layer.x}px`,
+                  top: `${layer.y}px`,
+                  fontSize: `${layer.fontSize}px`,
+                  color: layer.color,
+                }}
+              >
+                {layer.text}
+              </div>
+            ))}
+
+            {/* Render Sticker Layers */}
+            {stickers.map((sticker) => (
+              <div
+                key={sticker.id}
+                onMouseDown={(e) =>
+                  handleItemMouseDown(
+                    e,
+                    sticker,
+                    onUpdateStickerPosition,
+                    onSelectSticker
+                  )
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectSticker(sticker.id);
+                  onSelectText(null);
+                }}
+                className={`meme-sticker-layer ${
+                  selectedStickerId === sticker.id ? 'selected' : ''
+                }`}
+                style={{
+                  left: `${sticker.x}px`,
+                  top: `${sticker.y}px`,
+                  fontSize: `${sticker.size || 48}px`,
+                }}
+              >
+                {sticker.emoji}
+              </div>
+            ))}
+          </>
+        ) : (
+          <div className="placeholder-content">
+            <span className="placeholder-icon">🖼️</span>
+            <h3>Preview Area</h3>
+            <p>Upload an image to start creating your meme</p>
+          </div>
+        )}
+      </div>
+    </main>
+  );
 }
